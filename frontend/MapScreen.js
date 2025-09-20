@@ -1,5 +1,5 @@
-import Yamap from 'react-native-yamap';
-import Sidebar from './Sidebar';
+import { Yamap, Placemark } from 'react-native-yamap'; // ИСПРАВЛЕН ИМПОРТ
+import { Sidebar } from './Sidebar';
 import * as Location from 'expo-location';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
@@ -69,10 +69,10 @@ export function MapScreen() {
         }}
       >
         {markers.map(marker => (
-          <Yamap.Placemark key={marker.id} point={marker.coordinate} />
+          <Placemark key={marker.id} point={marker.coordinate} /> // ИСПОЛЬЗУЕТСЯ КАК ОТДЕЛЬНЫЙ ТЕГ
         ))}
         {userLocation && (
-          <Yamap.Placemark point={userLocation} />
+          <Placemark point={userLocation} /> // ИСПОЛЬЗУЕТСЯ КАК ОТДЕЛЬНЫЙ ТЕГ
         )}
       </Yamap>
 
