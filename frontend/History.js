@@ -1,81 +1,120 @@
-import { View, Text,ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView,TouchableOpacity, StyleSheet } from 'react-native';
 import Sidebar from './Sidebar';
+import { useNavigation } from '@react-navigation/native';
 
 export function History() {
-    const info=["User 1 uploaded file",
-    "User 2 uploaded file",
-    "User 3 uploaded file",
-    "User 4 uploaded file",
-    "User 5 uploaded file",
-    "User 6 uploaded file",
-    "User 7 uploaded file",
-    "User 8 uploaded file",
-    "User 9 uploaded file",
-    "User 10 uploaded file",
-    "User 11 uploaded file",
-    "User 12 uploaded file",
-    "User 13 uploaded file",
-    "User 14 uploaded file",
-    "User 15 uploaded file",
-    "User 16 uploaded file",
-    "User 17 uploaded file",
-    "User 18 uploaded file",
-    "User 19 uploaded file",
-    "User 20 uploaded file",];
-  return (
-    <View>
-      
-    <Text style={styles.title}>Reces users upload </Text>
-     <Sidebar />
-    <ScrollView style={styles.scrollContainer}>
-        {info.map((data,index)=>
-        <View key={index} style={styles.container}>
-          <View style={styles.subcomtainer}>
-            <Text>{index}. {data} | </Text>
-            <Text>id:{}</Text>
-          </View>
-          <Text>time: {}</Text>
-        </View>
-        )
-}
+  const info = [
+    "User 1 ",
+    "User 2 ",
+    "User 3 ",
+    "User 4 ",
+    "User 5 ",
+    "User 6 ",
+    "User 7 ",
+    "User 8 ",
+    "User 9 ",
+    "User 10 ",
+    "User 11 ",
+    "User 12 ",
+    "User 13 ",
+    "User 14 ",
+    "User 15 ",
+    "User 16 ",
+    "User 17 ",
+    "User 18 ",
+    "User 19 ",
+    "User 20 ",
+  ];
+  const navigation = useNavigation();
+  const handleSign = () => {
+    navigation.navigate('BLE');
+  };
 
-    </ScrollView>
+  return (
+    <View style={{ flex: 1 }}>
+      <Text style={styles.title}>Recents users upload</Text>
+      <TouchableOpacity  onPress={handleSign}>
+              <Text style={styles.buttonText}>Log in</Text>
+      </TouchableOpacity>
+      <Sidebar />
+      <ScrollView style={styles.scrollContainer}>
+        {info.map((data, index) => (
+          <View key={index} style={styles.container}>
+            
+            <View style={styles.indexBox}>
+              <Text style={styles.indexText}>{index + 1}</Text>
+            </View>
+
+           
+            <View style={styles.contentBox}>
+              <View style={styles.row}>
+                <Text style={styles.userText}>{data}</Text>
+              </View>
+              <View style={styles.row}>
+                <Text style={styles.infoText}>Time: 12:00</Text>
+                <Text style={styles.infoText}> | id: 123</Text>
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'column',
+    flexDirection: 'row',            
     alignItems: 'center',
     backgroundColor: '#d3d3d3',
     borderRadius: 10,
     height: 60,
     marginBottom: 15,
-    paddingHorizontal: 15,
-    marginLeft: 40,
-
-    
-
-    
+    marginHorizontal: 20,
     elevation: 5,
   },
   scrollContainer: {
-                  
-  paddingVertical: 10,       
-  paddingHorizontal: 10,    
-  backgroundColor: '#e9e9e9ff', 
-
+    paddingVertical: 10,
+    backgroundColor: '#e9e9e9ff',
   },
   title: {
     marginTop: 15,
     marginBottom: 15,
-    textAlign:'center',
+    textAlign: 'center',
     fontSize: 25,
+    fontWeight: 'bold',
     color: '#1c1c1cff',
   },
-  subcomtainer: {
+
+  /** Левая колонка — номер */
+  indexBox: {
+    width: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderRightColor: '#6c6c6cff',
+  },
+  indexText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+
+  /** Правая часть */
+  contentBox: {
+    flex: 1,
+    paddingHorizontal: 10,
+    justifyContent: 'center',
+  },
+  row: {
     flexDirection: 'row',
-  }
+    alignItems: 'center',
+  },
+  userText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  infoText: {
+    fontSize: 12,
+    color: '#555',
+  },
 });
