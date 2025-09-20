@@ -4,6 +4,7 @@ import { Login } from './Login';
 import { StyleSheet, Text, View } from 'react-native';
 import { MapScreen } from './MapScreen';
 import {Blem}  from './Blem';
+import {ChatBLE } from './ChatBLE'
 
 import {History} from './History'
 
@@ -17,6 +18,7 @@ export default function App() {
         <Stack.Screen name="MapScreen" component={MapScreen} />
         <Stack.Screen name="History" component={History}/>
         <Stack.Screen name="Blem" component={Blem} />
+        <Stack.Screen name="ChatBLE" component={ChatBLE} />
       </Stack.Navigator>
     </NavigationContainer>
   );

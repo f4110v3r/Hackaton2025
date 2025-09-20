@@ -6,7 +6,7 @@ import { Buffer } from 'buffer';
 const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; // Example service UUID
 const CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'; // Example characteristic UUID
 
-const ChatBLE = () => {
+export function ChatBLE () {
   const [devices, setDevices] = useState([]);
   const [connectedDevice, setConnectedDevice] = useState(null);
   const [messages, setMessages] = useState([]);
