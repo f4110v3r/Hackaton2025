@@ -1,7 +1,7 @@
 
 import { View, Text, StyleSheet } from 'react-native';
 
-export function Dashboard() {
+export default function Dashboard() {
   return (
     <View style={styles.container}>
       <Text>Добро пожаловать в Dashboard!</Text>
