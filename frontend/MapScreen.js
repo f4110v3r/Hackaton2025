@@ -16,6 +16,12 @@ export function MapScreen() {
       title: 'Пир-сосед',
       description: 'Активен',
       coordinate: { latitude: 55.752, longitude: 37.615 }
+    },
+    {
+      id: '3',
+      title: 'Датчик',
+      description: 'Активен',
+      coordinate: { latitude: 55.752, longitude: 37.615 }
     }
   ]);
 
