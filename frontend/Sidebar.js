@@ -74,7 +74,7 @@ export default function Sidebar() {
         {...panResponder.panHandlers}
         style={[
 
-          styles.sidebar,
+          styles.Sidebar,
           {
             transform: [{ translateX: animation }],
           },
