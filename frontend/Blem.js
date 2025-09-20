@@ -14,7 +14,7 @@ import { BleManager } from 'react-native-ble-plx';
 
 
 
-export function Ble() {
+export function Blem() {
   const [devices, setDevices] = useState([]);
   const [deviceName, setDeviceName] = useState(Device.deviceName || 'Unknown'); // имя устройства
   const manager = new BleManager();
