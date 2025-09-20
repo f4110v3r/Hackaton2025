@@ -1,31 +1,16 @@
-// frontend/MapScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
+import Sidebar from './Sidebar'; // импортируем Sidebar
 
 export function MapScreen() {
   const [markers, setMarkers] = useState([
-    {
-      id: '1',
-      title: 'Опасный объект',
-      description: 'Скорость: 1200 м/с',
-      coordinate: { latitude: 55.751244, longitude: 37.618423 }
-    },
-    {
-      id: '2',
-      title: 'Пир-сосед',
-      description: 'Активен',
-      coordinate: { latitude: 55.752, longitude: 37.615 }
-    },
-    {
-      id: '3',
-      title: 'Датчик',
-      description: 'Активен',
-      coordinate: { latitude: 55.752, longitude: 37.615 }
-    }
+    { id: '1', title: 'Опасный объект', description: 'Скорость: 1200 м/с', coordinate: { latitude: 55.751244, longitude: 37.618423 } },
+    { id: '2', title: 'Пир-сосед', description: 'Активен', coordinate: { latitude: 55.752, longitude: 37.615 } },
+    { id: '3', title: 'Датчик', description: 'Активен', coordinate: { latitude: 55.752, longitude: 37.615 } }
   ]);
 
-  // Пример динамического обновления (можно заменить на P2P или BLE данные)
+  // Динамическое добавление маркеров
   useEffect(() => {
     const interval = setInterval(() => {
       setMarkers(prev => [
@@ -34,10 +19,7 @@ export function MapScreen() {
           id: String(prev.length + 1),
           title: 'Новый объект',
           description: 'Появился недавно',
-          coordinate: {
-            latitude: 55.751 + Math.random() * 0.01,
-            longitude: 37.618 + Math.random() * 0.01
-          }
+          coordinate: { latitude: 55.751 + Math.random() * 0.01, longitude: 37.618 + Math.random() * 0.01 }
         }
       ]);
     }, 10000);
@@ -47,6 +29,7 @@ export function MapScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Карта */}
       <MapView
         style={styles.map}
         initialRegion={{
@@ -65,11 +48,14 @@ export function MapScreen() {
           />
         ))}
       </MapView>
+
+      {/* Сайдбар поверх карты */}
+      <Sidebar />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  map: { flex: 1 }
+  map: { flex: 1 },
 });
