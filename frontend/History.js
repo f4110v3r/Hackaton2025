@@ -1,4 +1,5 @@
 import { View, Text,ScrollView, StyleSheet } from 'react-native';
+import Sidebar from './Sidebar';
 
 export function History() {
     const info=["User 1 uploaded file",
@@ -24,12 +25,16 @@ export function History() {
   return (
     <View>
       
-    <Text style={styles.title}>Recents users upload </Text>
+    <Text style={styles.title}>Reces users upload </Text>
+     <Sidebar />
     <ScrollView style={styles.scrollContainer}>
         {info.map((data,index)=>
         <View key={index} style={styles.container}>
-            <Text>{index}</Text>
-            <Text>{data}</Text>
+          <View style={styles.subcomtainer}>
+            <Text>{index}. {data} | </Text>
+            <Text>id:{}</Text>
+          </View>
+          <Text>time: {}</Text>
         </View>
         )
 }
@@ -42,16 +47,19 @@ export function History() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',  
-    backgroundColor: '#868686ff',
-    shadowColor: '#000',
-    marginTop: 15,
-    marginLeft: 60,
-    elevation: 10,
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: '#d3d3d3',
     borderRadius: 10,
     height: 60,
+    marginBottom: 15,
+    paddingHorizontal: 15,
+    marginLeft: 40,
+
+    
+
+    
+    elevation: 5,
   },
   scrollContainer: {
                   
@@ -67,4 +75,7 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: '#1c1c1cff',
   },
+  subcomtainer: {
+    flexDirection: 'row',
+  }
 });
