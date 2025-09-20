@@ -1,12 +1,14 @@
-import { Yamap, Placemark } from 'react-native-yamap'; // ИСПРАВЛЕН ИМПОРТ
-import { Sidebar } from './Sidebar';
-import * as Location from 'expo-location';
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
+import Sidebar from './Sidebar';
+import * as Location from 'expo-location';
 
 export function MapScreen() {
   const [markers, setMarkers] = useState([
-    { id: '1', title: 'Опасный объект', coordinate: { latitude: 55.751244, longitude: 37.618423 } },
+    { id: '1', title: 'Опасный объект', description: 'Скорость: 1200 м/с', coordinate: { latitude: 55.751244, longitude: 37.618423 } },
+    { id: '2', title: 'Пир-сосед', description: 'Активен', coordinate: { latitude: 55.752, longitude: 37.615 } },
+    { id: '3', title: 'Датчик', description: 'Активен', coordinate: { latitude: 55.752, longitude: 37.615 } }
   ]);
   const [userLocation, setUserLocation] = useState(null);
 
@@ -14,14 +16,15 @@ export function MapScreen() {
     let subscription = null;
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-      
+      if (status !== 'granted') {
+        setUserLocation(null);
+        return;
+      }
       const location = await Location.getCurrentPositionAsync({});
       setUserLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       });
-
       subscription = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.High, distanceInterval: 1 },
         (loc) => {
@@ -32,9 +35,10 @@ export function MapScreen() {
         }
       );
     })();
-
     return () => {
-      if (subscription) subscription.remove();
+      if (subscription) {
+        subscription.remove();
+      }
     };
   }, []);
 
@@ -47,6 +51,7 @@ export function MapScreen() {
         {
           id: String(prev.length + 1),
           title: 'Новый объект',
+          description: 'Появился недавно',
           coordinate: {
             latitude: userLocation.latitude + Math.random() * 0.01,
             longitude: userLocation.longitude + Math.random() * 0.01,
@@ -60,23 +65,33 @@ export function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <Yamap
+      <MapView
         style={styles.map}
-        apiKey="YOUR_YANDEX_API_KEY"
-        camera={{
-          target: userLocation || { latitude: 55.751244, longitude: 37.618423 },
-          zoom: 10,
+        region={{
+          latitude: userLocation ? userLocation.latitude : 55.751244,
+          longitude: userLocation ? userLocation.longitude : 37.618423,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05
         }}
       >
         {markers.map(marker => (
-          <Placemark key={marker.id} point={marker.coordinate} /> // ИСПОЛЬЗУЕТСЯ КАК ОТДЕЛЬНЫЙ ТЕГ
+          <Marker
+            key={marker.id}
+            coordinate={marker.coordinate}
+            title={marker.title}
+            description={marker.description}
+          />
         ))}
         {userLocation && (
-          <Placemark point={userLocation} /> // ИСПОЛЬЗУЕТСЯ КАК ОТДЕЛЬНЫЙ ТЕГ
+          <Marker
+            coordinate={userLocation}
+            title="Вы здесь"
+            pinColor="green"
+          />
         )}
-      </Yamap>
+      </MapView>
 
-      {/* Отладочный оверлей */}
+      {/* Отладочный оверлей с координатами пользователя */}
       {userLocation && (
         <View style={styles.debugOverlay}>
           <Text style={styles.debugText}>Lat: {userLocation.latitude.toFixed(6)}</Text>
@@ -84,7 +99,7 @@ export function MapScreen() {
         </View>
       )}
 
-      {/* Сайдбар */}
+      {/* Сайдбар поверх карты */}
       <Sidebar />
     </View>
   );
@@ -102,5 +117,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     zIndex: 10,
   },
-  debugText: { color: 'white', fontSize: 12 },
+  debugText: {
+    color: 'white',
+    fontSize: 12,
+  },
 });
