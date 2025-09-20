@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from './Login';
 import { StyleSheet, Text, View } from 'react-native';
 import { MapScreen } from './MapScreen';
-import { BLE } from './BLE';
+import { Ble } from './Ble';
 
 import {History} from './History'
 
@@ -16,7 +16,7 @@ export default function App() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="MapScreen" component={MapScreen} />
         <Stack.Screen name="History" component={History}/>
-        <Stack.Screen name="BLE" component={BLE} />
+        <Stack.Screen name="Ble" component={Ble} />
       </Stack.Navigator>
     </NavigationContainer>
   );
