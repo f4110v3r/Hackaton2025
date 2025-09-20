@@ -1,56 +1,58 @@
-// frontend/locationService.js
-import { PermissionsAndroid } from 'react-native';
+import { PermissionsAndroid, Platform } from 'react-native';
+import Geolocation from 'react-native-geolocation-service';
 
-// Запрос разрешений на Android
 export async function requestLocationPermission() {
-  try {
-    const granted = await PermissionsAndroid.request(
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      {
-        title: 'Разрешение на доступ к геолокации',
-        message: 'Приложению нужен доступ к вашей геолокации для отображения положения на карте.',
-        buttonPositive: 'OK',
-      }
-    );
-    return granted === PermissionsAndroid.RESULTS.GRANTED;
-  } catch (err) {
-    console.warn(err);
-    return false;
+  if (Platform.OS === 'android') {
+    try {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        {
+          title: 'Location Permission',
+          message: 'This app requires access to your location.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } catch (err) {
+      console.warn(err);
+      return false;
+    }
+  } else {
+    return true;
   }
 }
 
-// Получение текущей позиции
-export function getCurrentLocation(success, error) {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
+export function getCurrentLocation(successCallback, errorCallback) {
+  Geolocation.getCurrentPosition(
     (position) => {
-      success(position.coords);
+      const { latitude, longitude } = position.coords;
+      successCallback({ latitude, longitude });
     },
-    (err) => {
-      if (error) error(err);
+    (error) => {
+      errorCallback(error.message);
     },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 }
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
   );
 }
 
-// Запуск слежения за позицией
-export function startWatchPosition(onUpdate, onError) {
-  if (!navigator.geolocation) return null;
-  const watchId = navigator.geolocation.watchPosition(
+export function startWatchPosition(successCallback, errorCallback) {
+  const watchId = Geolocation.watchPosition(
     (position) => {
-      onUpdate(position.coords);
+      const { latitude, longitude } = position.coords;
+      successCallback({ latitude, longitude });
     },
-    (err) => {
-      if (onError) onError(err);
+    (error) => {
+      errorCallback(error.message);
     },
-    { enableHighAccuracy: true, distanceFilter: 5, interval: 5000, fastestInterval: 2000 }
+    { enableHighAccuracy: true, distanceFilter: 0, interval: 5000, fastestInterval: 2000 }
   );
   return watchId;
 }
 
-// Остановка слежения
 export function stopWatchPosition(watchId) {
-  if (navigator.geolocation && watchId != null) {
-    navigator.geolocation.clearWatch(watchId);
+  if (watchId != null) {
+    Geolocation.clearWatch(watchId);
   }
 }

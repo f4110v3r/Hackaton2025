@@ -108,23 +108,14 @@ export default function Sidebar() {
           <TouchableOpacity style={styles.item} onPress={() => handleNavigate('Login')}>
             <Text style={styles.itemText}>Login</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.item} onPress={() => handleNavigate('SignIn')}>
-            <Text style={styles.itemText}>SignIn</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.item} onPress={() => handleNavigate('Dashboard')}>
-            <Text style={styles.itemText}>Dashboard</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.item} onPress={() => handleNavigate('MapScreen')}>
             <Text style={styles.itemText}>MapScreen</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.item} onPress={() => handleNavigate('History')}>
             <Text style={styles.itemText}>History</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.item} onPress={() => handleNavigate('Profile')}>
-            <Text style={styles.itemText}>Profile</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.item} onPress={() => handleNavigate('Settings')}>
-            <Text style={styles.itemText}>Settings</Text>
+          <TouchableOpacity style={styles.item} onPress={() => handleNavigate('ChatBLE')}>
+            <Text style={styles.itemText}>Chat</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.item} onPress={handleLogout}>
             <Text style={styles.itemText}>Logout</Text>
