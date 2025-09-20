@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from './Login';
 import { Dashboard } from './Dashboard'; // создайте заглушку
-import { SignIn } from './SignIn';       // создайте заглушку
+// import { SignIn } from './SignIn';       // создайте заглушку
 
 const Stack = createNativeStackNavigator();
 
@@ -12,8 +12,8 @@ export default function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Dashboard" component={Dashboard} />
-        <Stack.Screen name="SignIn" component={SignIn} />
+         <Stack.Screen name="Dashboard" component={Dashboard} />
+        {/*<Stack.Screen name="SignIn" component={SignIn} /> */}
       </Stack.Navigator>
     </NavigationContainer>
   );
