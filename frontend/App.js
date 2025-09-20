@@ -8,7 +8,7 @@ import { Login } from './Login';
 function Dashboard() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Добро пожаловать в Dashboard!</Text>
+      <Text style={styles.text}>Добро пожаловать в Калворлд!</Text>
     </View>
   );
 }
