@@ -2,15 +2,17 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 export function Login() {
   const navigation = useNavigation();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
+  const Stack = createNativeStackNavigator();
 
   const handleLogin = () => {
     if (login === 'Serega' && password === '1234') {
-      navigation.navigate('Dashboard');
+      navigation.navigate('Dashboard')
     } else {
       Alert.alert('Ошибка', 'Неверный логин или пароль');
     }
@@ -40,7 +42,7 @@ export function Login() {
         secureTextEntry
       />
 
-      <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+      <TouchableOpacity style={styles.loginButton} onPress={navigation.navigate('Dashboard')}>
         <Text style={styles.buttonText}>Log in</Text>
       </TouchableOpacity>
 
