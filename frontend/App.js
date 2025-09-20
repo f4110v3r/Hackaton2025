@@ -3,21 +3,13 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from './Login';
-
-// Заглушка Dashboard
-function Dashboard() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Добро пожаловать в Калворлд!</Text>
-    </View>
-  );
-}
+import { Dashboard } from './Dashboard'
 
 // Заглушка SignIn
 function SignIn() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Страница регистрации</Text>
+      <Text style={styles.text}>Страница регистации</Text>
     </View>
   );
 }
