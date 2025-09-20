@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, TextInput, Button, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, FlatList, TextInput, Button, TouchableOpacity, StyleSheet, Alert, Platform, PermissionsAndroid } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
+import BleAdvertiser from 'react-native-ble-advertiser';
 
 const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; // Example service UUID
 const CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'; // Example characteristic UUID
@@ -14,17 +15,66 @@ export function ChatBLE () {
   const [isScanning, setIsScanning] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState(null);
+  const [isAdvertising, setIsAdvertising] = useState(false);
 
   const subscriptionRef = useRef(null);
   const managerRef = useRef(null);
 
+  const requestPermissions = async () => {
+    if (Platform.OS === 'android') {
+      try {
+        const permissions = [];
+        if (Platform.Version >= 31) {
+          // Android 12+ permissions
+          permissions.push(PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN);
+          permissions.push(PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT);
+          permissions.push(PermissionsAndroid.PERMISSIONS.BLUETOOTH_ADVERTISE);
+        }
+        permissions.push(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+
+        for (const key in granted) {
+          if (granted[key] !== PermissionsAndroid.RESULTS.GRANTED) {
+            Alert.alert('Permission required', `Permission ${key} is required for BLE functionality.`);
+            return false;
+          }
+        }
+        return true;
+      } catch (err) {
+        Alert.alert('Permission error', err.message);
+        return false;
+      }
+    }
+    return true;
+  };
+
   useEffect(() => {
     managerRef.current = new BleManager();
+
+    const startAdvertising = async () => {
+      if (Platform.OS === 'android') {
+        try {
+          await BleAdvertiser.setCompanyId(0x1234); // Example company ID
+          await BleAdvertiser.broadcast(SERVICE_UUID, [CHARACTERISTIC_UUID], { connectable: true });
+          setIsAdvertising(true);
+        } catch (advError) {
+          setError('Advertising error: ' + advError.message);
+          setIsAdvertising(false);
+        }
+      }
+    };
 
     const waitForPoweredOn = async () => {
       try {
         const state = await managerRef.current.state();
         if (state === 'PoweredOn') {
+          const permissionGranted = await requestPermissions();
+          if (!permissionGranted) {
+            setError('Required permissions not granted.');
+            return;
+          }
+          startAdvertising();
           startScan();
         } else {
           setTimeout(waitForPoweredOn, 500);
@@ -41,6 +91,10 @@ export function ChatBLE () {
         managerRef.current.stopDeviceScan();
       }
       subscriptionRef.current && subscriptionRef.current.remove();
+      if (Platform.OS === 'android' && isAdvertising) {
+        BleAdvertiser.stopBroadcast();
+        setIsAdvertising(false);
+      }
       if (managerRef.current) {
         managerRef.current.destroy();
       }
@@ -63,7 +117,7 @@ export function ChatBLE () {
     setIsScanning(true);
     setError(null);
 
-    managerRef.current.startDeviceScan(null, null, (error, device) => {
+    managerRef.current.startDeviceScan([SERVICE_UUID], null, (error, device) => {
       if (error) {
         setError(error.message);
         setIsScanning(false);
@@ -161,6 +215,7 @@ export function ChatBLE () {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>BLE Peripheral (Advertising) Status: {isAdvertising ? 'Advertising' : 'Not Advertising'}</Text>
       {!connectedDevice ? (
         <>
           <Text style={styles.title}>Nearby BLE Devices</Text>
