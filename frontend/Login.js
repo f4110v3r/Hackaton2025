@@ -17,7 +17,7 @@ export function Login() {
   };
 
   const handleSign = () => {
-    navigation.navigate('SignIn');
+    navigation.navigate('History');
   };
 
   return (
