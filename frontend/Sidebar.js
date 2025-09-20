@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Modal } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Modal, PanResponder, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
 const sidebarWidth = 240;
@@ -8,34 +8,74 @@ export default function Sidebar() {
   const navigation = useNavigation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
-  const [animation] = useState(new Animated.Value(-sidebarWidth));
+  const animation = useRef(new Animated.Value(-sidebarWidth)).current;
 
-  const toggleSidebar = () => {
-    if (isSidebarOpen) {
-      Animated.timing(animation, {
-        toValue: -sidebarWidth,
-        duration: 320,
-        useNativeDriver: true,
-      }).start(() => setIsSidebarOpen(false));
-    } else {
-      setIsSidebarOpen(true);
-      Animated.timing(animation, {
-        toValue: 0,
-        duration: 320,
-        useNativeDriver: true,
-      }).start();
-    }
+  const screenWidth = Dimensions.get('window').width;
+
+  const openSidebar = () => {
+    setIsSidebarOpen(true);
+    Animated.timing(animation, {
+      toValue: 0,
+      duration: 320,
+      useNativeDriver: true,
+    }).start();
   };
 
-  const handleNavigate = (screen) => {
-    setIsSidebarOpen(false);
+  const closeSidebar = () => {
     Animated.timing(animation, {
       toValue: -sidebarWidth,
       duration: 320,
       useNativeDriver: true,
-    }).start(() => {
-      navigation.navigate(screen);
-    });
+    }).start(() => setIsSidebarOpen(false));
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: (evt, gestureState) => {
+        if (!isSidebarOpen && evt.nativeEvent.pageX < 20) {
+          return true;
+        }
+        if (isSidebarOpen) {
+          return true;
+        }
+        return false;
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        let dx = gestureState.dx;
+        if (!isSidebarOpen) {
+          if (dx > 0 && dx <= sidebarWidth) {
+            animation.setValue(dx - sidebarWidth);
+          }
+        } else {
+          if (dx < 0 && dx >= -sidebarWidth) {
+            animation.setValue(dx);
+          }
+        }
+      },
+      onPanResponderRelease: (evt, gestureState) => {
+        let dx = gestureState.dx;
+        let vx = gestureState.vx;
+
+        if (!isSidebarOpen) {
+          if (dx > sidebarWidth / 2 || vx > 0.5) {
+            openSidebar();
+          } else {
+            closeSidebar();
+          }
+        } else {
+          if (dx < -sidebarWidth / 2 || vx < -0.5) {
+            closeSidebar();
+          } else {
+            openSidebar();
+          }
+        }
+      },
+    })
+  ).current;
+
+  const handleNavigate = (screen) => {
+    closeSidebar();
+    navigation.navigate(screen);
   };
 
   const handleLogout = () => {
@@ -44,15 +84,9 @@ export default function Sidebar() {
 
   const confirmLogout = () => {
     setShowLogoutPopup(false);
-    setIsSidebarOpen(false);
-    Animated.timing(animation, {
-      toValue: -sidebarWidth,
-      duration: 320,
-      useNativeDriver: true,
-    }).start(() => {
-      // Implement your logout logic here
-      navigation.navigate('Login');
-    });
+    closeSidebar();
+    // Implement your logout logic here
+    navigation.navigate('Login');
   };
 
   const cancelLogout = () => {
@@ -61,9 +95,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <TouchableOpacity style={styles.toggleButton} onPress={toggleSidebar}>
-        <Text style={styles.toggleButtonText}>{isSidebarOpen ? 'Close' : 'Open'} Menu</Text>
-      </TouchableOpacity>
+      <View style={styles.gestureZone} {...panResponder.panHandlers} />
       <Animated.View
         style={[
           styles.sidebar,
@@ -99,6 +131,9 @@ export default function Sidebar() {
           </TouchableOpacity>
         </View>
       </Animated.View>
+      {isSidebarOpen && (
+        <TouchableOpacity style={styles.overlay} onPress={closeSidebar} />
+      )}
       <Modal
         visible={showLogoutPopup}
         transparent
@@ -124,20 +159,6 @@ export default function Sidebar() {
 }
 
 const styles = StyleSheet.create({
-  toggleButton: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    backgroundColor: 'rgba(40,40,40,0.7)',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    zIndex: 1000,
-  },
-  toggleButtonText: {
-    color: '#fff',
-    fontSize: 16,
-  },
   sidebar: {
     position: 'absolute',
     top: 0,
@@ -157,6 +178,15 @@ const styles = StyleSheet.create({
     elevation: 10,
     overflow: 'visible',
     zIndex: 999,
+  },
+  gestureZone: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 20,
+    backgroundColor: 'transparent',
+    zIndex: 1000,
   },
   list: {
     flex: 1,
@@ -219,7 +249,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   popupButtonText: {
-    color: '#fff',
+    color: '#000000ff',
     fontSize: 16,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    zIndex: 500,
   },
 });
