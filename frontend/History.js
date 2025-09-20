@@ -23,11 +23,12 @@ export function History() {
     "User 20 uploaded file",];
   return (
     <View>
-        
+      
     <Text style={styles.title}>Recents users upload </Text>
     <ScrollView style={styles.scrollContainer}>
         {info.map((data,index)=>
         <View key={index} style={styles.container}>
+            <Text>{index}</Text>
             <Text>{data}</Text>
         </View>
         )
@@ -42,26 +43,28 @@ export function History() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center', // по вертикали
-    alignItems: 'center',     // по горизонтали
-    backgroundColor: '#858585ff',
+    justifyContent: 'center',
+    alignItems: 'center',  
+    backgroundColor: '#868686ff',
+    shadowColor: '#000',
     marginTop: 15,
     marginLeft: 60,
+    elevation: 10,
     borderRadius: 10,
     height: 60,
   },
   scrollContainer: {
-    color: '#000000ff',
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 100,
+                  
+  paddingVertical: 10,       
+  paddingHorizontal: 10,    
+  backgroundColor: '#e9e9e9ff', 
+
   },
   title: {
     marginTop: 15,
     marginBottom: 15,
     textAlign:'center',
     fontSize: 25,
-    color: '#1d1d1dff',
+    color: '#1c1c1cff',
   },
 });
