@@ -12,12 +12,12 @@ import {
 } from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
 
-const manager = new BleManager();
 
-export function BLE() {
+
+export function Blem() {
   const [devices, setDevices] = useState([]);
   const [deviceName, setDeviceName] = useState(Device.deviceName || 'Unknown'); // имя устройства
-
+  const manager = new BleManager();
   useEffect(() => {
     // Запрашиваем имя устройства (expo-device)
     setDeviceName(Device.deviceName || 'Unknown');

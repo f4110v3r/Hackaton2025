@@ -1,7 +1,7 @@
 import { View, Text, ScrollView,TouchableOpacity, StyleSheet } from 'react-native';
 import Sidebar from './Sidebar';
 import { useNavigation } from '@react-navigation/native';
-import { BLE } from './BLE';
+import { Blem } from './Blem';
 export function History() {
   const info = [
     "User 1 ",
@@ -25,17 +25,17 @@ export function History() {
     "User 19 ",
     "User 20 ",
   ];
-  const navigation = useNavigation();
-  const handleSign = () => {
-    navigation.navigate("BLE");
-  };
+ const navigation = useNavigation();
+ const handleSign = () => {
+ navigation.navigate("Blem");
+ };
 
   return (
     <View style={{ flex: 1 }}>
       <Text style={styles.title}>Recents users upload</Text>
       <TouchableOpacity  onPress={handleSign}>
               <Text style={styles.buttonText}>Log in</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> 
       <Sidebar />
       <ScrollView style={styles.scrollContainer}>
         {info.map((data, index) => (
