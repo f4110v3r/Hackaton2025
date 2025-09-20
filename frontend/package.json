@@ -15,6 +15,7 @@
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
     "react-native": "0.81.4",
+    "react-native-ble-peripheral": "^2.0.1",
     "react-native-maps": "1.20.1"
   },
   "private": true
