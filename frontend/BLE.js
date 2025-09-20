@@ -1,22 +1,28 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, FlatList, TextInput, Button, StyleSheet, Alert, Platform, PermissionsAndroid } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import * as Device from 'expo-device';    
+      // ✅ вместо react-native-device-info
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  PermissionsAndroid,
+  Platform,
+  StyleSheet,
+} from 'react-native';
 import { BleManager } from 'react-native-ble-plx';
-import { Buffer } from 'buffer';
 
-// UUID вашего сервиса и характеристики
-const SERVICE_UUID = '0000feed-0000-1000-8000-00805f9b34fb';
-const CHARACTERISTIC_UUID = '0000beef-0000-1000-8000-00805f9b34fb';
 
-export default function BLEChat() {
-  const managerRef = useRef(null);
+
+export function Ble() {
   const [devices, setDevices] = useState([]);
-  const [connectedDevice, setConnectedDevice] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState('');
-
+  const [deviceName, setDeviceName] = useState(Device.deviceName || 'Unknown'); // имя устройства
+  const manager = new BleManager();
   useEffect(() => {
-    managerRef.current = new BleManager();
+    // Запрашиваем имя устройства (expo-device)
+    setDeviceName(Device.deviceName || 'Unknown');
 
+    // Запрос прав на Android
     if (Platform.OS === 'android') {
       PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
@@ -25,7 +31,8 @@ export default function BLEChat() {
       ]);
     }
 
-    const subscription = managerRef.current.onStateChange((state) => {
+    // Когда Bluetooth включён — стартуем скан
+    const subscription = manager.onStateChange((state) => {
       if (state === 'PoweredOn') {
         scanDevices();
         subscription.remove();
@@ -33,17 +40,22 @@ export default function BLEChat() {
     }, true);
 
     return () => {
-      managerRef.current.stopDeviceScan();
+      manager.stopDeviceScan();
     };
   }, []);
 
   const scanDevices = () => {
-    setDevices([]);
-    managerRef.current.startDeviceScan([SERVICE_UUID], null, (error, device) => {
-      if (error) return;
+    setDevices([]); // очистка списка
+    manager.startDeviceScan(null, null, (error, device) => {
+      if (error) {
+        console.log('Scan error', error);
+        return;
+      }
+
       if (device && device.name) {
-        setDevices(prev => {
-          if (!prev.find(d => d.id === device.id)) return [...prev, device];
+        setDevices((prev) => {
+          const exists = prev.find((d) => d.id === device.id);
+          if (!exists) return [...prev, device];
           return prev;
         });
       }
@@ -51,76 +63,71 @@ export default function BLEChat() {
   };
 
   const connectToDevice = async (device) => {
-    managerRef.current.stopDeviceScan();
+    manager.stopDeviceScan();
     try {
-      const connected = await managerRef.current.connectToDevice(device.id);
-      await connected.discoverAllServicesAndCharacteristics();
-      setConnectedDevice(connected);
-
-      // Подписка на входящие сообщения
-      connected.monitorCharacteristicForService(SERVICE_UUID, CHARACTERISTIC_UUID, (err, char) => {
-        if (err) return;
-        const msg = Buffer.from(char.value, 'base64').toString();
-        setMessages(prev => [...prev, { from: device.name, text: msg }]);
-      });
-
-      Alert.alert('Connected', `Подключено к ${device.name}`);
+      const connectedDevice = await manager.connectToDevice(device.id);
+      await connectedDevice.discoverAllServicesAndCharacteristics();
+      alert(`Подключено к ${device.name}`);
     } catch (err) {
-      console.log(err);
+      console.log('Connect error', err);
     }
   };
 
-  const sendMessage = async () => {
-    if (!connectedDevice || !input) return;
-    try {
-      await connectedDevice.writeCharacteristicWithResponseForService(
-        SERVICE_UUID,
-        CHARACTERISTIC_UUID,
-        Buffer.from(input).toString('base64')
-      );
-      setMessages(prev => [...prev, { from: 'Me', text: input }]);
-      setInput('');
-    } catch (err) {
-      console.log(err);
-    }
-  };
+  const renderItem = ({ item }) => (
+    <TouchableOpacity
+      style={styles.deviceItem}
+      onPress={() => connectToDevice(item)}
+    >
+      <Text style={styles.deviceName}>{item.name}</Text>
+      <Text style={styles.deviceId}>{item.id}</Text>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>BLE Chat</Text>
+      <Text style={styles.title}>BLE Scanner</Text>
+      <Text style={styles.myDevice}>📱 My device name: {deviceName}</Text>
 
-      {!connectedDevice && (
-        <FlatList
-          data={devices}
-          keyExtractor={item => item.id}
-          renderItem={({ item }) => (
-            <Button title={`Connect to ${item.name}`} onPress={() => connectToDevice(item)} />
-          )}
-        />
-      )}
-
-      {connectedDevice && (
-        <>
-          <FlatList
-            data={messages}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => <Text>{item.from}: {item.text}</Text>}
-          />
-          <TextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            placeholder="Type message..."
-          />
-          <Button title="Send" onPress={sendMessage} />
-        </>
-      )}
+      <FlatList
+        data={devices}
+        keyExtractor={(item) => item.id}
+        renderItem={renderItem}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10 },
-  input: { borderWidth: 1, padding: 10, marginVertical: 10 },
+  container: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: '#f3f3f3',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  myDevice: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#333',
+  },
+  deviceItem: {
+    padding: 15,
+    backgroundColor: '#fff',
+    marginBottom: 10,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  deviceName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  deviceId: {
+    fontSize: 12,
+    color: '#666',
+  },
 });

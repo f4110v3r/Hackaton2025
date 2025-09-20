@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from './Login';
 import { StyleSheet, Text, View } from 'react-native';
 import { MapScreen } from './MapScreen';
-import { Ble } from './Ble';
+import {Ble} from './Ble';
 
 import {History} from './History'
 
@@ -12,7 +12,7 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="BLE">
+      <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="MapScreen" component={MapScreen} />
         <Stack.Screen name="History" component={History}/>

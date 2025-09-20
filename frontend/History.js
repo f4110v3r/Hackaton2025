@@ -1,7 +1,7 @@
 import { View, Text, ScrollView,TouchableOpacity, StyleSheet } from 'react-native';
 import Sidebar from './Sidebar';
 import { useNavigation } from '@react-navigation/native';
-import { BLE } from './BLE';
+import Ble from './Ble';
 export function History() {
   const info = [
     "User 1 ",
@@ -27,7 +27,7 @@ export function History() {
   ];
   const navigation = useNavigation();
   const handleSign = () => {
-    navigation.navigate("BLE");
+    navigation.navigate("Ble");
   };
 
   return (
