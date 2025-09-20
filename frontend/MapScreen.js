@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import Yamap from 'react-native-yamap';
 import Sidebar from './Sidebar';
 import * as Location from 'expo-location';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, Text } from 'react-native';
 
 export function MapScreen() {
   const [markers, setMarkers] = useState([
-    { id: '1', title: 'Опасный объект', description: 'Скорость: 1200 м/с', coordinate: { latitude: 55.751244, longitude: 37.618423 } },
-    { id: '2', title: 'Пир-сосед', description: 'Активен', coordinate: { latitude: 55.752, longitude: 37.615 } },
-    { id: '3', title: 'Датчик', description: 'Активен', coordinate: { latitude: 55.752, longitude: 37.615 } }
+    { id: '1', title: 'Опасный объект', coordinate: { latitude: 55.751244, longitude: 37.618423 } },
   ]);
   const [userLocation, setUserLocation] = useState(null);
 
@@ -16,15 +14,14 @@ export function MapScreen() {
     let subscription = null;
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setUserLocation(null);
-        return;
-      }
+      if (status !== 'granted') return;
+      
       const location = await Location.getCurrentPositionAsync({});
       setUserLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       });
+
       subscription = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.High, distanceInterval: 1 },
         (loc) => {
@@ -35,10 +32,9 @@ export function MapScreen() {
         }
       );
     })();
+
     return () => {
-      if (subscription) {
-        subscription.remove();
-      }
+      if (subscription) subscription.remove();
     };
   }, []);
 
@@ -51,7 +47,6 @@ export function MapScreen() {
         {
           id: String(prev.length + 1),
           title: 'Новый объект',
-          description: 'Появился недавно',
           coordinate: {
             latitude: userLocation.latitude + Math.random() * 0.01,
             longitude: userLocation.longitude + Math.random() * 0.01,
@@ -65,33 +60,23 @@ export function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView
+      <Yamap
         style={styles.map}
-        region={{
-          latitude: userLocation ? userLocation.latitude : 55.751244,
-          longitude: userLocation ? userLocation.longitude : 37.618423,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05
+        apiKey="YOUR_YANDEX_API_KEY"
+        camera={{
+          target: userLocation || { latitude: 55.751244, longitude: 37.618423 },
+          zoom: 10,
         }}
       >
         {markers.map(marker => (
-          <Marker
-            key={marker.id}
-            coordinate={marker.coordinate}
-            title={marker.title}
-            description={marker.description}
-          />
+          <Yamap.Placemark key={marker.id} point={marker.coordinate} />
         ))}
         {userLocation && (
-          <Marker
-            coordinate={userLocation}
-            title="Вы здесь"
-            pinColor="green"
-          />
+          <Yamap.Placemark point={userLocation} />
         )}
-      </MapView>
+      </Yamap>
 
-      {/* Отладочный оверлей с координатами пользователя */}
+      {/* Отладочный оверлей */}
       {userLocation && (
         <View style={styles.debugOverlay}>
           <Text style={styles.debugText}>Lat: {userLocation.latitude.toFixed(6)}</Text>
@@ -99,7 +84,7 @@ export function MapScreen() {
         </View>
       )}
 
-      {/* Сайдбар поверх карты */}
+      {/* Сайдбар */}
       <Sidebar />
     </View>
   );
@@ -117,8 +102,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     zIndex: 10,
   },
-  debugText: {
-    color: 'white',
-    fontSize: 12,
-  },
+  debugText: { color: 'white', fontSize: 12 },
 });
