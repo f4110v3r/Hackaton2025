@@ -282,5 +282,3 @@ const styles = StyleSheet.create({
   input: { flex: 1, borderColor: '#ccc', borderWidth: 1, borderRadius: 4, paddingHorizontal: 8, height: 40, marginRight: 8 },
   errorText: { color: 'red', marginBottom: 8 },
 });
-
-export default ChatBLE;
