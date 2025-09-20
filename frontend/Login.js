@@ -10,7 +10,7 @@ export function Login() {
 
   const handleLogin = () => {
     if (login === 'Serega' && password === '1234') {
-      navigation.navigate('MapScreen');
+      navigation.navigate("MapScreen");
     } else {
       Alert.alert('Ошибка', 'Неверный логин или пароль');
     }
