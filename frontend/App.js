@@ -6,15 +6,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login } from './Login';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View } from 'react-native';
-
-// Заглушка Dashboard
-function Dashboard() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Добро пожаловать в Калворлд!</Text>
-    </View>
-  );
-}
 import { Dashboard } from './Dashboard'
 
 // Заглушка SignIn
@@ -50,10 +41,4 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   text: { fontSize: 20, fontWeight: 'bold' },
 });
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+};
