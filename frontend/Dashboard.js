@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 export default function Dashboard() {
   return (
     <View style={styles.container}>
-      <Text>Добро пожаловать в Dashboard!</Text>
+      <Text>Добро пожаловать в Калворлд!</Text>
     </View>
   );
 }
