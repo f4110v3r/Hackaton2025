@@ -117,6 +117,9 @@ export default function Sidebar() {
           <TouchableOpacity style={styles.item} onPress={() => handleNavigate('ChatBLE')}>
             <Text style={styles.itemText}>Chat</Text>
           </TouchableOpacity>
+                    <TouchableOpacity style={styles.item} onPress={() => handleNavigate('BleChat')}>
+            <Text style={styles.itemText}>BleChat</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.item} onPress={handleLogout}>
             <Text style={styles.itemText}>Logout</Text>
           </TouchableOpacity>

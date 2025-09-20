@@ -4,6 +4,7 @@ import { Login } from './Login';
 import { StyleSheet, Text, View } from 'react-native';
 import { MapScreen } from './MapScreen';
 import {Ble} from './Ble';
+import {BleChat} from './BleChat';
 
 import {History} from './History'
 
