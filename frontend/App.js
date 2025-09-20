@@ -1,26 +1,29 @@
-import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Sidebar from './Sidebar'; // Sidebar.js
-import ChatBLE from './ChatBLE'; // ChatBLE.js
-import {Login} from './Login';
-import {MapScreen} from './MapScreen';
-import {History} from './History';
+import { Login } from './Login';
+import { StyleSheet, Text, View } from 'react-native';
+import { MapScreen } from './MapScreen';
+import { BLE } from './BLE';
+
+import {History} from './History'
 
 const Stack = createNativeStackNavigator();
 
-const App = () => {
+export default function App() {
   return (
     <NavigationContainer>
-      <Sidebar />
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="BLE">
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="MapScreen" component={MapScreen} />
-        <Stack.Screen name="History" component={History} />
-        <Stack.Screen name="ChatBLE" component={ChatBLE} />
+        <Stack.Screen name="History" component={History}/>
+        <Stack.Screen name="BLE" component={BLE} />
       </Stack.Navigator>
     </NavigationContainer>
   );
-};
+}
 
-export default App;
+const styles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  text: { fontSize: 20, fontWeight: 'bold' },
+});
+
