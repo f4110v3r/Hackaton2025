@@ -7,13 +7,15 @@ import {Blem}  from './Blem';
 import {ChatBLE } from './ChatBLE'
 import {MapScreen} from './MapScreen'
 import {History} from './History'
+import {DangerLevel} from './DangerLevel'
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName="DangerLevel">
+        <Stack.Screen name="DangerLevel" component={DangerLevel} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="MapScreen" component={MapScreen} />
         <Stack.Screen name="History" component={History}/>

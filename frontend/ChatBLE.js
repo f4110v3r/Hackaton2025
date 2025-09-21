@@ -55,7 +55,7 @@ export function ChatBLE () {
     const startAdvertising = async () => {
       if (Platform.OS === 'android') {
         try {
-          await BleAdvertiser.setCompanyId(0x1234); // Example company ID
+          await BleAdvertiser.setCompanyId(0x1234);
           await BleAdvertiser.broadcast(SERVICE_UUID, [CHARACTERISTIC_UUID], { connectable: true });
           setIsAdvertising(true);
         } catch (advError) {
