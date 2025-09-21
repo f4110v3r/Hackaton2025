@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, Animated, Easing } from 'react-native
 import haversine from 'haversine-distance';
 import Sidebar from './Sidebar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Magnetometer } from 'expo-sensors';
 
 // Функция для определения сектора по углу
 const getSectorFromAngle = (angle) => {
@@ -31,7 +32,10 @@ const sectorToAngle = {
 export const DangerLevel = ({ sensorDataArray, userCoords }) => {
   const [threatPercent, setThreatPercent] = useState(0);
   const [safeSector, setSafeSector] = useState('N');
+  const [userHeading, setUserHeading] = useState(0);
   const rotation = useRef(new Animated.Value(0)).current;
+  const safeRotation = useRef(new Animated.Value(0)).current;
+  const lastSafeRotation = useRef(0);
 
   useEffect(() => {
     if (!sensorDataArray || sensorDataArray.length === 0) return;
@@ -69,19 +73,70 @@ export const DangerLevel = ({ sensorDataArray, userCoords }) => {
 
   }, [sensorDataArray, userCoords]);
 
+  // Subscribe to Magnetometer to get device heading
   useEffect(() => {
-    const toValue = sectorToAngle[safeSector] || 0;
+    const subscription = Magnetometer.addListener(data => {
+      let { x, y } = data;
+      let angle = Math.atan2(y, x) * (180 / Math.PI);
+      // Adjust so that 0 is North
+      let heading = (angle + 360) % 360;
+      setUserHeading(heading);
+    });
+    Magnetometer.setUpdateInterval(100);
+
+    return () => {
+      subscription && subscription.remove();
+    };
+  }, []);
+
+  // Animate user heading rotation
+  useEffect(() => {
+    // Normalize heading to -180 to 180 for smooth animation
+    let newValue = userHeading > 180 ? userHeading - 360 : userHeading;
     Animated.timing(rotation, {
-      toValue: toValue,
-      duration: 800,
+      toValue: newValue,
+      duration: 300,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
-  }, [safeSector]);
+  }, [userHeading]);
+
+  // Animate safe direction arrow rotation relative to user heading
+  useEffect(() => {
+    const safeAngle = sectorToAngle[safeSector] || 0;
+    // Calculate relative angle from user heading
+    let relativeAngle = safeAngle - userHeading;
+    if (relativeAngle > 180) relativeAngle -= 360;
+    else if (relativeAngle < -180) relativeAngle += 360;
+
+    // Animate safe arrow rotation
+    let start = lastSafeRotation.current;
+    let end = relativeAngle;
+    let diff = end - start;
+
+    if (diff > 180) diff -= 360;
+    else if (diff < -180) diff += 360;
+
+    const finalValue = start + diff;
+
+    Animated.timing(safeRotation, {
+      toValue: finalValue,
+      duration: 800,
+      easing: Easing.out(Easing.ease),
+      useNativeDriver: true,
+    }).start(() => {
+      lastSafeRotation.current = finalValue % 360;
+    });
+  }, [safeSector, userHeading]);
 
   const rotateInterpolate = rotation.interpolate({
-    inputRange: [-180, 180],
-    outputRange: ['-180deg', '180deg'],
+    inputRange: [-360, 360],
+    outputRange: ['-360deg', '360deg'],
+  });
+
+  const safeRotateInterpolate = safeRotation.interpolate({
+    inputRange: [-360, 360],
+    outputRange: ['-360deg', '360deg'],
   });
 
   const renderSensor = ({ item }) => (
@@ -97,7 +152,8 @@ export const DangerLevel = ({ sensorDataArray, userCoords }) => {
     <View style={styles.container}>
       <View style={styles.compassContainer}>
         <View style={styles.compassCircle}>
-          <Animated.View style={[styles.arrow, { transform: [{ rotate: rotateInterpolate }] }]} />
+          <Animated.View style={[styles.userArrow, { transform: [{ rotate: rotateInterpolate }] }]} />
+          <Animated.View style={[styles.safeArrow, { transform: [{ rotate: safeRotateInterpolate }] }]} />
           <Text style={styles.compassLabel}>N</Text>
         </View>
         <Text style={styles.safeDirection}>Безопасное направление: {safeSector}</Text>
@@ -146,7 +202,7 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  arrow: {
+  userArrow: {
     width: 0,
     height: 0,
     borderLeftWidth: 12,
@@ -154,9 +210,21 @@ const styles = StyleSheet.create({
     borderBottomWidth: 40,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: '#e74c3c',
+    borderBottomColor: '#2980b9', // Blue color for user direction
     position: 'absolute',
     top: 20,
+  },
+  safeArrow: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderBottomWidth: 30,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    borderBottomColor: '#27ae60', // Green color for safe direction
+    position: 'absolute',
+    top: 35,
   },
   compassLabel: {
     position: 'absolute',

@@ -18,10 +18,13 @@ import { View, Text, StyleSheet, FlatList, Alert, Platform, AppState } from 'rea
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BleManager } from 'react-native-ble-plx';
 
-export const Blem = () => {
+// Добавлен проп onSensorData для передачи данных в DangerLevel
+export const Blem = (props) => {
   const [manager] = useState(() => new BleManager());
   const [devices, setDevices] = useState([]);
   const [sensorDataArray, setSensorDataArray] = useState([]);
+  // История измерений
+  const [sensorHistory, setSensorHistory] = useState([]);
   const [connectedDevices, setConnectedDevices] = useState(new Map());
   const [isScanning, setIsScanning] = useState(false);
   const [lastScanTime, setLastScanTime] = useState(null);
@@ -37,9 +40,8 @@ export const Blem = () => {
   useEffect(() => {
     initializeBLE();
     loadStoredData();
-    
+    loadSensorHistory();
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
     return () => {
       cleanup();
       subscription?.remove();
@@ -105,6 +107,7 @@ export const Blem = () => {
     scanForDevices();
   };
 
+  // Случайная генерация типа устройства и данных для тестирования DangerLevel
   const scanForDevices = () => {
     if (isScanning) return;
     
@@ -119,6 +122,14 @@ export const Blem = () => {
       }
 
       if (device && device.name) {
+        // --- СИМУЛЯЦИЯ данных для DangerLevel ---
+        // Случайная генерация типа устройства
+        const types = ['regular', 'scanner', 'user'];
+        // Стабильно по id, чтобы тип не прыгал при каждом скане
+        let hash = 0;
+        for (let i = 0; i < device.id.length; i++) hash += device.id.charCodeAt(i);
+        const type = types[hash % types.length];
+
         // Обновляем список найденных устройств
         setDevices(prevDevices => {
           const existingIndex = prevDevices.findIndex(d => d.id === device.id);
@@ -128,7 +139,8 @@ export const Blem = () => {
             rssi: device.rssi,
             lastSeen: new Date().toLocaleTimeString(),
             hasData: connectedDevices.has(device.id),
-            lastDataUpdate: getDeviceLastUpdate(device.id)
+            lastDataUpdate: getDeviceLastUpdate(device.id),
+            deviceType: type // для отладки
           };
 
           if (existingIndex >= 0) {
@@ -139,6 +151,43 @@ export const Blem = () => {
             return [...prevDevices, deviceData];
           }
         });
+
+        // Генерация случайных данных для устройств типа scanner и user
+        if (type === 'scanner' || type === 'user') {
+          // Случайная температура и влажность
+          const temp = 18 + Math.random() * 10; // 18-28°C
+          const hum = 40 + Math.random() * 30;  // 40-70%
+          // Случайные координаты в пределах Москвы для теста
+          const lat = 55.75 + Math.random() * 0.1;
+          const lng = 37.6 + Math.random() * 0.2;
+          const nowIso = new Date().toISOString();
+          const sensorData = {
+            id: `${device.id}_${Date.now()}`,
+            deviceId: device.id,
+            deviceName: device.name,
+            temperature: temp,
+            humidity: hum,
+            lastUpdate: nowIso,
+            position: { lat, lng },
+            deviceType: type
+          };
+          // Добавляем в sensorDataArray и историю
+          setSensorDataArray(prev => {
+            const updated = [...prev.filter(d => d.deviceId !== device.id), sensorData];
+            saveDataToStorage(updated);
+            return updated;
+          });
+          setSensorHistory(prev => {
+            const updated = [...prev, { ...sensorData, historyTimestamp: nowIso }];
+            AsyncStorage.setItem('sensorHistory', JSON.stringify(updated));
+            return updated;
+          });
+          // Передаём данные в DangerLevel через проп
+          if (props && typeof props.onSensorData === 'function') {
+            props.onSensorData(sensorData);
+          }
+        }
+        // --- КОНЕЦ СИМУЛЯЦИИ ---
 
         // Автоподключение к BLE устройствам
         if (!connectedDevices.has(device.id)) {
@@ -283,16 +332,35 @@ export const Blem = () => {
     }
   };
 
+  // Добавить новые данные в историю (merge)
+  const mergeHistory = async (newEntries) => {
+    try {
+      // Получить текущую историю
+      let history = sensorHistory;
+      if (!Array.isArray(history)) history = [];
+      // Добавить новые записи
+      const merged = [...history, ...newEntries];
+      setSensorHistory(merged);
+      await AsyncStorage.setItem('sensorHistory', JSON.stringify(merged));
+    } catch (error) {
+      console.log('Ошибка сохранения истории:', error);
+    }
+  };
+
   const mergeReceivedData = (receivedDataArray, fromDeviceId, currentTime) => {
     setSensorDataArray(prevData => {
       const mergedData = [...prevData];
-      
+      let newHistoryEntries = [];
       receivedDataArray.forEach(newItem => {
         if (newItem.temperature !== undefined || newItem.humidity !== undefined) {
           const existingIndex = mergedData.findIndex(
             existing => existing.deviceId === newItem.deviceId
           );
-          
+          // Для истории: сохраняем каждое новое измерение
+          newHistoryEntries.push({
+            ...newItem,
+            historyTimestamp: currentTime
+          });
           if (existingIndex >= 0) {
             // Обновляем существующую запись если новые данные свежее
             if (new Date(newItem.lastUpdate) > new Date(mergedData[existingIndex].lastUpdate)) {
@@ -304,16 +372,16 @@ export const Blem = () => {
           }
         }
       });
-      
       // Сортируем по времени обновления
       const sorted = mergedData.sort((a, b) => new Date(b.lastUpdate) - new Date(a.lastUpdate));
-      
       // Обновляем статус устройства
       updateDeviceStatus(fromDeviceId, true, currentTime);
-      
       // Сохраняем данные
       saveDataToStorage(sorted);
-      
+      // Добавляем в историю
+      if (newHistoryEntries.length > 0) {
+        mergeHistory(newHistoryEntries);
+      }
       console.log(`Получены реальные данные от ${fromDeviceId}`);
       return sorted;
     });
@@ -335,6 +403,18 @@ export const Blem = () => {
       }
     } catch (error) {
       console.log('Ошибка загрузки данных:', error);
+    }
+  };
+
+  // Загрузить историю измерений
+  const loadSensorHistory = async () => {
+    try {
+      const storedHistory = await AsyncStorage.getItem('sensorHistory');
+      if (storedHistory) {
+        setSensorHistory(JSON.parse(storedHistory));
+      }
+    } catch (error) {
+      console.log('Ошибка загрузки истории:', error);
     }
   };
 
