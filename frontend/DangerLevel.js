@@ -4,6 +4,7 @@ import haversine from 'haversine-distance';
 import Sidebar from './Sidebar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Magnetometer } from 'expo-sensors';
+import RNFS from 'react-native-fs';
 
 // Функция для определения сектора по углу
 const getSectorFromAngle = (angle) => {
@@ -29,13 +30,32 @@ const sectorToAngle = {
   NW: -45,
 };
 
-export const DangerLevel = ({ sensorDataArray, userCoords }) => {
+export const DangerLevel = ({ sensorDataArray: propSensorDataArray, userCoords, historyFilePath }) => {
   const [threatPercent, setThreatPercent] = useState(0);
   const [safeSector, setSafeSector] = useState('N');
   const [userHeading, setUserHeading] = useState(0);
+  const [sensorDataArray, setSensorDataArray] = useState(propSensorDataArray || []);
   const rotation = useRef(new Animated.Value(0)).current;
   const safeRotation = useRef(new Animated.Value(0)).current;
   const lastSafeRotation = useRef(0);
+
+  useEffect(() => {
+    if (!historyFilePath) return;
+    RNFS.readFile(historyFilePath, 'utf8')
+      .then(content => {
+        try {
+          const data = JSON.parse(content);
+          if (Array.isArray(data)) {
+            setSensorDataArray(data);
+          }
+        } catch (e) {
+          // Invalid JSON, ignore
+        }
+      })
+      .catch(() => {
+        // File read error, ignore
+      });
+  }, [historyFilePath]);
 
   useEffect(() => {
     if (!sensorDataArray || sensorDataArray.length === 0) return;

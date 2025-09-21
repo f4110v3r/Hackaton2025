@@ -15,7 +15,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert, Platform, AppState } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+import RNFS from 'react-native-fs';
+// Путь к файлу истории сенсоров
+const SENSOR_HISTORY_PATH = `${RNFS.DocumentDirectoryPath}/sensorHistory.json`;
 import { BleManager } from 'react-native-ble-plx';
 
 // Добавлен проп onSensorData для передачи данных в DangerLevel
@@ -171,7 +174,7 @@ export const Blem = (props) => {
             position: { lat, lng },
             deviceType: type
           };
-          // Добавляем в sensorDataArray и историю
+          // Добавляем в sensorDataArray и историю, записываем в файл после генерации
           setSensorDataArray(prev => {
             const updated = [...prev.filter(d => d.deviceId !== device.id), sensorData];
             saveDataToStorage(updated);
@@ -179,7 +182,8 @@ export const Blem = (props) => {
           });
           setSensorHistory(prev => {
             const updated = [...prev, { ...sensorData, historyTimestamp: nowIso }];
-            AsyncStorage.setItem('sensorHistory', JSON.stringify(updated));
+            // Сохраняем историю в файл
+            saveSensorHistoryToFile(updated);
             return updated;
           });
           // Передаём данные в DangerLevel через проп
@@ -332,7 +336,7 @@ export const Blem = (props) => {
     }
   };
 
-  // Добавить новые данные в историю (merge)
+  // Добавить новые данные в историю (merge) и записать в файл
   const mergeHistory = async (newEntries) => {
     try {
       // Получить текущую историю
@@ -341,7 +345,7 @@ export const Blem = (props) => {
       // Добавить новые записи
       const merged = [...history, ...newEntries];
       setSensorHistory(merged);
-      await AsyncStorage.setItem('sensorHistory', JSON.stringify(merged));
+      await saveSensorHistoryToFile(merged);
     } catch (error) {
       console.log('Ошибка сохранения истории:', error);
     }
@@ -387,31 +391,65 @@ export const Blem = (props) => {
     });
   };
 
+  // Сохраняет sensorDataArray в файл sensorHistory.json (перезаписывает только sensorDataArray часть)
   const saveDataToStorage = async (data) => {
     try {
-      await AsyncStorage.setItem('sensorDataArray', JSON.stringify(data));
+      // Читаем текущий файл, чтобы не затереть историю
+      let fileObj = { sensorDataArray: [], sensorHistory: [] };
+      if (await RNFS.exists(SENSOR_HISTORY_PATH)) {
+        const fileContent = await RNFS.readFile(SENSOR_HISTORY_PATH);
+        try {
+          fileObj = JSON.parse(fileContent);
+        } catch (e) {}
+      }
+      fileObj.sensorDataArray = data;
+      await RNFS.writeFile(SENSOR_HISTORY_PATH, JSON.stringify(fileObj), 'utf8');
     } catch (error) {
       console.log('Ошибка сохранения данных:', error);
     }
   };
 
+  // Сохраняет sensorHistory в файл sensorHistory.json (перезаписывает только sensorHistory часть)
+  const saveSensorHistoryToFile = async (history) => {
+    try {
+      let fileObj = { sensorDataArray: [], sensorHistory: [] };
+      if (await RNFS.exists(SENSOR_HISTORY_PATH)) {
+        const fileContent = await RNFS.readFile(SENSOR_HISTORY_PATH);
+        try {
+          fileObj = JSON.parse(fileContent);
+        } catch (e) {}
+      }
+      fileObj.sensorHistory = history;
+      await RNFS.writeFile(SENSOR_HISTORY_PATH, JSON.stringify(fileObj), 'utf8');
+    } catch (error) {
+      console.log('Ошибка сохранения истории:', error);
+    }
+  };
+
+  // Загружает sensorDataArray из файла sensorHistory.json
   const loadStoredData = async () => {
     try {
-      const storedData = await AsyncStorage.getItem('sensorDataArray');
-      if (storedData) {
-        setSensorDataArray(JSON.parse(storedData));
+      if (await RNFS.exists(SENSOR_HISTORY_PATH)) {
+        const fileContent = await RNFS.readFile(SENSOR_HISTORY_PATH);
+        const obj = JSON.parse(fileContent);
+        if (obj && Array.isArray(obj.sensorDataArray)) {
+          setSensorDataArray(obj.sensorDataArray);
+        }
       }
     } catch (error) {
       console.log('Ошибка загрузки данных:', error);
     }
   };
 
-  // Загрузить историю измерений
+  // Загрузить историю измерений из файла sensorHistory.json
   const loadSensorHistory = async () => {
     try {
-      const storedHistory = await AsyncStorage.getItem('sensorHistory');
-      if (storedHistory) {
-        setSensorHistory(JSON.parse(storedHistory));
+      if (await RNFS.exists(SENSOR_HISTORY_PATH)) {
+        const fileContent = await RNFS.readFile(SENSOR_HISTORY_PATH);
+        const obj = JSON.parse(fileContent);
+        if (obj && Array.isArray(obj.sensorHistory)) {
+          setSensorHistory(obj.sensorHistory);
+        }
       }
     } catch (error) {
       console.log('Ошибка загрузки истории:', error);
