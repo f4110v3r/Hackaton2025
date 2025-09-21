@@ -86,7 +86,6 @@ const styles = StyleSheet.create({
     color: '#1c1c1cff',
   },
 
-  /** Левая колонка — номер */
   indexBox: {
     width: 50,
     justifyContent: 'center',
@@ -99,7 +98,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 
-  /** Правая часть */
   contentBox: {
     flex: 1,
     paddingHorizontal: 10,

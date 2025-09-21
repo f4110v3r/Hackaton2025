@@ -4,8 +4,8 @@ import { BleManager } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
 import BleAdvertiser from 'react-native-ble-advertiser';
 
-const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; // Example service UUID
-const CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'; // Example characteristic UUID
+const SERVICE_UUID = '0000ffe0-0000-1000-8000-00805f9b34fb'; 
+const CHARACTERISTIC_UUID = '0000ffe1-0000-1000-8000-00805f9b34fb'; 
 
 export function ChatBLE () {
   const [devices, setDevices] = useState([]);

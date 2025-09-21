@@ -6,7 +6,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Magnetometer } from 'expo-sensors';
 import RNFS from 'react-native-fs';
 
-// Функция для определения сектора по углу
 const getSectorFromAngle = (angle) => {
   if (angle >= -22.5 && angle < 22.5) return 'E';
   if (angle >= 22.5 && angle < 67.5) return 'NE';
@@ -49,11 +48,10 @@ export const DangerLevel = ({ sensorDataArray: propSensorDataArray, userCoords, 
             setSensorDataArray(data);
           }
         } catch (e) {
-          // Invalid JSON, ignore
+          
         }
       })
       .catch(() => {
-        // File read error, ignore
       });
   }, [historyFilePath]);
 
@@ -93,12 +91,12 @@ export const DangerLevel = ({ sensorDataArray: propSensorDataArray, userCoords, 
 
   }, [sensorDataArray, userCoords]);
 
-  // Subscribe to Magnetometer to get device heading
+
   useEffect(() => {
     const subscription = Magnetometer.addListener(data => {
       let { x, y } = data;
       let angle = Math.atan2(y, x) * (180 / Math.PI);
-      // Adjust so that 0 is North
+
       let heading = (angle + 360) % 360;
       setUserHeading(heading);
     });
@@ -109,9 +107,8 @@ export const DangerLevel = ({ sensorDataArray: propSensorDataArray, userCoords, 
     };
   }, []);
 
-  // Animate user heading rotation
   useEffect(() => {
-    // Normalize heading to -180 to 180 for smooth animation
+
     let newValue = userHeading > 180 ? userHeading - 360 : userHeading;
     Animated.timing(rotation, {
       toValue: newValue,
@@ -121,15 +118,15 @@ export const DangerLevel = ({ sensorDataArray: propSensorDataArray, userCoords, 
     }).start();
   }, [userHeading]);
 
-  // Animate safe direction arrow rotation relative to user heading
+
   useEffect(() => {
     const safeAngle = sectorToAngle[safeSector] || 0;
-    // Calculate relative angle from user heading
+
     let relativeAngle = safeAngle - userHeading;
     if (relativeAngle > 180) relativeAngle -= 360;
     else if (relativeAngle < -180) relativeAngle += 360;
 
-    // Animate safe arrow rotation
+
     let start = lastSafeRotation.current;
     let end = relativeAngle;
     let diff = end - start;
@@ -230,7 +227,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 40,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: '#2980b9', // Blue color for user direction
+    borderBottomColor: '#2980b9', 
     position: 'absolute',
     top: 20,
   },
@@ -242,7 +239,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 30,
     borderLeftColor: 'transparent',
     borderRightColor: 'transparent',
-    borderBottomColor: '#27ae60', // Green color for safe direction
+    borderBottomColor: '#27ae60', 
     position: 'absolute',
     top: 35,
   },

@@ -42,7 +42,7 @@ export function MapScreen() {
     };
   }, []);
 
-  // Динамическое добавление маркеров
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (!userLocation) return;
@@ -91,7 +91,7 @@ export function MapScreen() {
         )}
       </MapView>
 
-      {/* Отладочный оверлей с координатами пользователя */}
+
       {userLocation && (
         <View style={styles.debugOverlay}>
           <Text style={styles.debugText}>Lat: {userLocation.latitude.toFixed(6)}</Text>
@@ -99,7 +99,7 @@ export function MapScreen() {
         </View>
       )}
 
-      {/* Сайдбар поверх карты */}
+
       <Sidebar />
     </View>
   );

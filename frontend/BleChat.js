@@ -3,8 +3,6 @@ import { View, Text, FlatList, TextInput, Button, StyleSheet, Alert, Platform, P
 import { BleManager } from 'react-native-ble-plx';
 import BleAdvertiser from 'react-native-ble-advertiser';
 import { Buffer } from 'buffer';
-
-// UUID вашего сервиса и характеристики
 const SERVICE_UUID = '0000feed-0000-1000-8000-00805f9b34fb';
 const CHARACTERISTIC_UUID = '0000beef-0000-1000-8000-00805f9b34fb';
 
@@ -101,8 +99,6 @@ export default function BleChat() {
       setStatus(`Connected to ${device.name || device.id}`);
       await connected.discoverAllServicesAndCharacteristics();
       setConnectedDevice(connected);
-
-      // Подписка на входящие сообщения
       connected.monitorCharacteristicForService(SERVICE_UUID, CHARACTERISTIC_UUID, (err, char) => {
         if (err) {
           setStatus(`Monitor error: ${err.message}`);

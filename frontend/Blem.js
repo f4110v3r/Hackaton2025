@@ -1,32 +1,15 @@
-/**
- * Установка зависимостей для Expo Managed Workflow:
- * 
- *   npx expo install @react-native-async-storage/async-storage
- *   npx expo install react-native-ble-plx
- * 
- * Если используете bare workflow, следуйте официальной документации по установке.
- * 
- * Запуск приложения с очисткой кэша:
- * 
- *   npx expo start -c
- * 
- * (или для npm: npm start -- --clear)
- */
-
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert, Platform, AppState } from 'react-native';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import RNFS from 'react-native-fs';
-// Путь к файлу истории сенсоров
+
 const SENSOR_HISTORY_PATH = `${RNFS.DocumentDirectoryPath}/sensorHistory.json`;
 import { BleManager } from 'react-native-ble-plx';
 
-// Добавлен проп onSensorData для передачи данных в DangerLevel
 export const Blem = (props) => {
   const [manager] = useState(() => new BleManager());
   const [devices, setDevices] = useState([]);
   const [sensorDataArray, setSensorDataArray] = useState([]);
-  // История измерений
   const [sensorHistory, setSensorHistory] = useState([]);
   const [connectedDevices, setConnectedDevices] = useState(new Map());
   const [isScanning, setIsScanning] = useState(false);
@@ -36,7 +19,6 @@ export const Blem = (props) => {
   const dataExchangeIntervalRef = useRef(null);
   const appStateRef = useRef(AppState.currentState);
 
-  // UUID для обмена данными
   const SERVICE_UUID = '12345678-1234-1234-1234-123456789abc';
   const DATA_EXCHANGE_CHARACTERISTIC = '87654321-4321-4321-4321-cba987654321';
 
@@ -65,34 +47,7 @@ export const Blem = (props) => {
       }
     }, true);
     return subscription;
-  };
-
-  const requestPermissionsAndStart = async () => {
-    // Expo managed workflow: BLE permissions запрашиваются через app.json и expo-permissions
-    // Expo автоматически запрашивает разрешения, если они прописаны в app.json
-    // Для bare workflow используйте PermissionsAndroid, как ниже (закомментировано)
-    /*
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        ]);
-        if (Object.values(granted).every(permission => permission === 'granted')) {
-          startContinuousOperations();
-        } else {
-          Alert.alert('Ошибка', 'Необходимы разрешения для работы с Bluetooth');
-        }
-      } catch (error) {
-        console.log('Ошибка запроса разрешений:', error);
-      }
-    } else {
-      startContinuousOperations();
-    }
-    */
-    startContinuousOperations();
-  };
+  }
 
   const startContinuousOperations = () => {
     // Сканирование каждые 10 секунд
@@ -125,15 +80,11 @@ export const Blem = (props) => {
       }
 
       if (device && device.name) {
-        // --- СИМУЛЯЦИЯ данных для DangerLevel ---
-        // Случайная генерация типа устройства
         const types = ['regular', 'scanner', 'user'];
-        // Стабильно по id, чтобы тип не прыгал при каждом скане
         let hash = 0;
         for (let i = 0; i < device.id.length; i++) hash += device.id.charCodeAt(i);
         const type = types[hash % types.length];
 
-        // Обновляем список найденных устройств
         setDevices(prevDevices => {
           const existingIndex = prevDevices.findIndex(d => d.id === device.id);
           const deviceData = {
@@ -143,7 +94,7 @@ export const Blem = (props) => {
             lastSeen: new Date().toLocaleTimeString(),
             hasData: connectedDevices.has(device.id),
             lastDataUpdate: getDeviceLastUpdate(device.id),
-            deviceType: type // для отладки
+            deviceType: type 
           };
 
           if (existingIndex >= 0) {
@@ -155,12 +106,9 @@ export const Blem = (props) => {
           }
         });
 
-        // Генерация случайных данных для устройств типа scanner и user
         if (type === 'scanner' || type === 'user') {
-          // Случайная температура и влажность
           const temp = 18 + Math.random() * 10; // 18-28°C
           const hum = 40 + Math.random() * 30;  // 40-70%
-          // Случайные координаты в пределах Москвы для теста
           const lat = 55.75 + Math.random() * 0.1;
           const lng = 37.6 + Math.random() * 0.2;
           const nowIso = new Date().toISOString();
@@ -174,7 +122,6 @@ export const Blem = (props) => {
             position: { lat, lng },
             deviceType: type
           };
-          // Добавляем в sensorDataArray и историю, записываем в файл после генерации
           setSensorDataArray(prev => {
             const updated = [...prev.filter(d => d.deviceId !== device.id), sensorData];
             saveDataToStorage(updated);
@@ -182,18 +129,14 @@ export const Blem = (props) => {
           });
           setSensorHistory(prev => {
             const updated = [...prev, { ...sensorData, historyTimestamp: nowIso }];
-            // Сохраняем историю в файл
             saveSensorHistoryToFile(updated);
             return updated;
           });
-          // Передаём данные в DangerLevel через проп
           if (props && typeof props.onSensorData === 'function') {
             props.onSensorData(sensorData);
           }
         }
-        // --- КОНЕЦ СИМУЛЯЦИИ ---
 
-        // Автоподключение к BLE устройствам
         if (!connectedDevices.has(device.id)) {
           if (device.name.includes('Sensor') || device.name.includes('ESP32') || 
               device.name.includes('BLE') || device.name.includes('Arduino')) {
@@ -230,7 +173,6 @@ export const Blem = (props) => {
         lastDataExchange: null
       }));
 
-      // Обновляем статус устройства в списке
       updateDeviceStatus(device.id, true, null);
       
       console.log(`Подключено к ${device.name}`);
@@ -254,7 +196,6 @@ export const Blem = (props) => {
       try {
         const device = deviceInfo.device;
         
-        // Читаем данные от устройства
         const characteristic = await device.readCharacteristicForService(
           SERVICE_UUID,
           DATA_EXCHANGE_CHARACTERISTIC
@@ -262,19 +203,13 @@ export const Blem = (props) => {
 
         if (characteristic?.value) {
           try {
-            // Expo не предоставляет atob/btoa, используйте Buffer или глобальные polyfill или npm пакет base-64
-            // Например:
-            // import { decode as atob, encode as btoa } from 'base-64';
-            // const receivedData = JSON.parse(atob(characteristic.value));
-            // Здесь для простоты:
+            
             const receivedData = JSON.parse(global.atob ? global.atob(characteristic.value) : Buffer.from(characteristic.value, 'base64').toString('utf8'));
             const currentTime = new Date().toISOString();
             
             if (receivedData.sensorData && Array.isArray(receivedData.sensorData)) {
-              // Обрабатываем полученный массив данных
               mergeReceivedData(receivedData.sensorData, deviceId, currentTime);
             } else if (receivedData.temperature !== undefined || receivedData.humidity !== undefined) {
-              // Обрабатываем одиночные данные датчика
               const singleDataItem = {
                 id: `${deviceId}_${Date.now()}`,
                 deviceId: deviceId,
@@ -292,19 +227,13 @@ export const Blem = (props) => {
           }
         }
 
-        // Отправляем наши данные устройству (если есть что отправить)
         if (sensorDataArray.length > 0) {
           const dataToSend = {
             type: 'DATA_EXCHANGE',
             timestamp: new Date().toISOString(),
             sensorData: sensorDataArray
           };
-          // Expo не предоставляет btoa, используйте base-64 (см. выше)
-          // await device.writeCharacteristicWithoutResponseForService(
-          //   SERVICE_UUID,
-          //   DATA_EXCHANGE_CHARACTERISTIC,
-          //   btoa(JSON.stringify(dataToSend))
-          // );
+          
           await device.writeCharacteristicWithoutResponseForService(
             SERVICE_UUID,
             DATA_EXCHANGE_CHARACTERISTIC,
@@ -312,7 +241,6 @@ export const Blem = (props) => {
           );
         }
 
-        // Обновляем время последнего обмена
         setConnectedDevices(prev => {
           const updated = new Map(prev);
           if (updated.has(deviceId)) {
@@ -324,7 +252,6 @@ export const Blem = (props) => {
       } catch (error) {
         console.log(`Ошибка обмена данными с ${deviceId}:`, error);
         
-        // Удаляем отключенное устройство
         setConnectedDevices(prev => {
           const updated = new Map(prev);
           updated.delete(deviceId);
@@ -336,13 +263,10 @@ export const Blem = (props) => {
     }
   };
 
-  // Добавить новые данные в историю (merge) и записать в файл
   const mergeHistory = async (newEntries) => {
     try {
-      // Получить текущую историю
       let history = sensorHistory;
       if (!Array.isArray(history)) history = [];
-      // Добавить новые записи
       const merged = [...history, ...newEntries];
       setSensorHistory(merged);
       await saveSensorHistoryToFile(merged);
@@ -360,29 +284,22 @@ export const Blem = (props) => {
           const existingIndex = mergedData.findIndex(
             existing => existing.deviceId === newItem.deviceId
           );
-          // Для истории: сохраняем каждое новое измерение
           newHistoryEntries.push({
             ...newItem,
             historyTimestamp: currentTime
           });
           if (existingIndex >= 0) {
-            // Обновляем существующую запись если новые данные свежее
             if (new Date(newItem.lastUpdate) > new Date(mergedData[existingIndex].lastUpdate)) {
               mergedData[existingIndex] = newItem;
             }
           } else {
-            // Добавляем новую запись
             mergedData.push(newItem);
           }
         }
       });
-      // Сортируем по времени обновления
       const sorted = mergedData.sort((a, b) => new Date(b.lastUpdate) - new Date(a.lastUpdate));
-      // Обновляем статус устройства
       updateDeviceStatus(fromDeviceId, true, currentTime);
-      // Сохраняем данные
       saveDataToStorage(sorted);
-      // Добавляем в историю
       if (newHistoryEntries.length > 0) {
         mergeHistory(newHistoryEntries);
       }
@@ -391,10 +308,8 @@ export const Blem = (props) => {
     });
   };
 
-  // Сохраняет sensorDataArray в файл sensorHistory.json (перезаписывает только sensorDataArray часть)
   const saveDataToStorage = async (data) => {
     try {
-      // Читаем текущий файл, чтобы не затереть историю
       let fileObj = { sensorDataArray: [], sensorHistory: [] };
       if (await RNFS.exists(SENSOR_HISTORY_PATH)) {
         const fileContent = await RNFS.readFile(SENSOR_HISTORY_PATH);
@@ -409,7 +324,6 @@ export const Blem = (props) => {
     }
   };
 
-  // Сохраняет sensorHistory в файл sensorHistory.json (перезаписывает только sensorHistory часть)
   const saveSensorHistoryToFile = async (history) => {
     try {
       let fileObj = { sensorDataArray: [], sensorHistory: [] };
@@ -426,7 +340,6 @@ export const Blem = (props) => {
     }
   };
 
-  // Загружает sensorDataArray из файла sensorHistory.json
   const loadStoredData = async () => {
     try {
       if (await RNFS.exists(SENSOR_HISTORY_PATH)) {
@@ -441,7 +354,6 @@ export const Blem = (props) => {
     }
   };
 
-  // Загрузить историю измерений из файла sensorHistory.json
   const loadSensorHistory = async () => {
     try {
       if (await RNFS.exists(SENSOR_HISTORY_PATH)) {

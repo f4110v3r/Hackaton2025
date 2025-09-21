@@ -30,7 +30,7 @@ export default function Sidebar() {
   };
 
   const panResponder = useRef(
-    PanResponder.create({
+    PanResponder.create({ 
       onStartShouldSetPanResponder: (evt, gestureState) => {
         if (!isSidebarOpen && evt.nativeEvent.pageX < 20) {
           return true;
@@ -85,7 +85,6 @@ export default function Sidebar() {
   const confirmLogout = () => {
     setShowLogoutPopup(false);
     closeSidebar();
-    // Implement your logout logic here
     navigation.navigate('Login');
   };
 
