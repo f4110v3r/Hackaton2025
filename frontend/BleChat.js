@@ -37,23 +37,26 @@ export default function BleChat() {
       }
     }
 
-    requestPermissions();
-
-    if (BleAdvertiser) {
-      BleAdvertiser.setCompanyId(0x1234);
-      BleAdvertiser.setIncludeDeviceName(true);
+    async function startAdvertising() {
+      if (BleAdvertiser === null) {
+        setAdvertisingStatus('BleAdvertiser not available (null)');
+        return;
+      }
+      try {
+        await requestPermissions();
+        BleAdvertiser.setCompanyId(0x1234);
+        BleAdvertiser.setIncludeDeviceName(true);
+        await BleAdvertiser.broadcast(SERVICE_UUID, [CHARACTERISTIC_UUID], { connectable: true });
+        setAdvertisingStatus('Advertising started');
+      } catch (error) {
+        setAdvertisingStatus(`Advertising error: ${error.message}`);
+      }
     }
 
     const subscription = managerRef.current.onStateChange((state) => {
       setStatus(`Bluetooth state: ${state}`);
       if (state === 'PoweredOn') {
-        if (BleAdvertiser) {
-          BleAdvertiser.broadcast(SERVICE_UUID, [CHARACTERISTIC_UUID], { connectable: true })
-            .then(() => setAdvertisingStatus('Advertising started'))
-            .catch(error => setAdvertisingStatus(`Advertising error: ${error.message}`));
-        } else {
-          setAdvertisingStatus('BleAdvertiser not available (null)');
-        }
+        startAdvertising();
         scanDevices();
         subscription.remove();
       }
@@ -62,7 +65,7 @@ export default function BleChat() {
     return () => {
       managerRef.current.stopDeviceScan();
       setStatus('Stopped device scan');
-      if (BleAdvertiser) {
+      if (BleAdvertiser !== null) {
         BleAdvertiser.stopBroadcast()
           .then(() => setAdvertisingStatus('Advertising stopped'))
           .catch(() => setAdvertisingStatus('Failed to stop advertising'));
